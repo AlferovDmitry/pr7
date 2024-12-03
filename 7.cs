@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
-// Структура для хранения информации о студенте
+// Класс для хранения информации о студенте
 public class Student
 {
     public string FullName; // Полное имя студента
@@ -19,12 +20,18 @@ public class Student
     }
 }
 
-// Структура для хранения информации об оценке
+// Класс для хранения информации об оценке
 public struct Grade
 {
     public string Subject; // Название предмета
     public int Score; // Оценка
     public DateTime Date; // Дата выставления оценки
+}
+
+public class Admin
+{
+    public string Login { get; set; } // Логин администратора
+    public string Password { get; set; } // Пароль администратора
 }
 
 public class Program
@@ -78,6 +85,26 @@ public class Program
         return student;
     }
 
+    public static void UpdateStudentGrade(string filename, string subject, int newScore)
+    {
+        // ... (Обработка ошибок и валидация крайне важны!) ...
+
+        Student student = LoadStudent(filename);
+
+        Grade gradeToUpdate = student.Grades.FirstOrDefault(g => g.Subject == subject); // Поиск оценки для изменения
+        if (gradeToUpdate != null)
+        {
+            gradeToUpdate.Score = newScore; // Изменение оценки
+        }
+        else
+        {
+            Console.WriteLine($"Оценка по предмету {subject} не найдена."); //Сообщение об ошибке
+            return; // Выход из функции
+        }
+
+
+        SaveStudent(student, filename); // Сохранение изменений
+    }
 
     public static void Main(string[] args)
     {
@@ -89,9 +116,9 @@ public class Program
             BirthYear = 2003,
             Group = "БСТ-22",
             Login = "dmitryalferov",
-            Password = "password123" // NEVER store passwords like this in real applications!
+            Password = "password123" // НИКОГДА не храните пароли так в реальных приложениях!
         };
-        student.Grades.Add(new Grade { Subject = "Основы алгоритмизации и программирования", Score = 5, Date = DateTime.Now }); // Изменен предмет
+        student.Grades.Add(new Grade { Subject = "Основы алгоритмизации и программирования", Score = 4, Date = DateTime.Now }); // Изменен предмет и оценка
         student.Grades.Add(new Grade { Subject = "Технические средства информатизации", Score = 4, Date = DateTime.Now.AddDays(-5) }); // Изменен предмет
 
 
@@ -103,5 +130,9 @@ public class Program
         {
             Console.WriteLine($"Предмет: {grade.Subject}, Оценка: {grade.Score}, Дата: {grade.Date}");
         }
+
+        UpdateStudentGrade("student.dat", "Основы алгоритмизации и программирования", 5); // Изменение оценки
+
+		// ... (Добавьте здесь код для реализации меню и контроля доступа на основе ролей) ...
     }
 }
