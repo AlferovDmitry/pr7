@@ -1,115 +1,107 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
-namespace EducationSystem
+// Структура для хранения информации о студенте
+public class Student
 {
-    public class User
-    {
-        public string FullName { get; set; }
-        public string Login { get; set; }
-        public string Password { get; set; }
+    public string FullName; // Полное имя студента
+    public int Age; // Возраст студента
+    public int BirthYear; // Год рождения студента
+    public string Group; // Группа студента
+    public string Login; // Логин студента
+    public string Password; // Пароль студента
+    public List<Grade> Grades; // Список оценок студента
 
-        public User(string fullName, string login, string password)
-        {
-            FullName = fullName;
-            Login = login;
-            Password = password;
-        }
+    public Student()
+    {
+        Grades = new List<Grade>();
     }
+}
 
-    public class Student : User
+// Структура для хранения информации об оценке
+public struct Grade
+{
+    public string Subject; // Название предмета
+    public int Score; // Оценка
+    public DateTime Date; // Дата выставления оценки
+}
+
+public class Program
+{
+    // Функция сохранения данных студента в бинарный файл
+    public static void SaveStudent(Student student, string filename)
     {
-        public string Group { get; set; }
-        public List<Grade> Grades { get; set; } = new();
-
-        public Student(string fullName, string login, string password, string group)
-            : base(fullName, login, password) => Group = group;
-
-        public void ViewGrades()
+        using (BinaryWriter writer = new BinaryWriter(new FileStream(filename, FileMode.Create)))
         {
-            Console.Clear();
-            Console.WriteLine($"Оценки студента {FullName}:\n");
-            Grades.ForEach(g => Console.WriteLine($"{g.Subject}: {g.Value} (Дата: {g.Date:dd.MM.yyyy})"));
-            Console.WriteLine("\nНажмите любую клавишу для возврата...");
-            Console.ReadKey();
-        }
-    }
+            writer.Write(student.FullName); // Запись полного имени
+            writer.Write(student.Age); // Запись возраста
+            writer.Write(student.BirthYear); // Запись года рождения
+            writer.Write(student.Group); // Запись группы
+            writer.Write(student.Login); // Запись логина
+            writer.Write(student.Password); // Запись пароля
 
-    public class Teacher : User
-    {
-        public List<string> Subjects { get; set; }
-        public List<string> Groups { get; set; }
-
-        public Teacher(string fullName, string login, string password, List<string> subjects, List<string> groups)
-            : base(fullName, login, password)
-        {
-            Subjects = subjects;
-            Groups = groups;
-        }
-
-        public void AddGrade(Student student, string subject, int gradeValue)
-        {
-            if (Subjects.Contains(subject) && Groups.Contains(student.Group))
+            writer.Write(student.Grades.Count); // Запись количества оценок
+            foreach (var grade in student.Grades)
             {
-                student.Grades.Add(new Grade(subject, gradeValue));
-                Console.WriteLine("Оценка успешно добавлена.");
-            }
-            else
-            {
-                Console.WriteLine("Недостаточно прав для выставления оценки.");
+                writer.Write(grade.Subject); // Запись названия предмета
+                writer.Write(grade.Score); // Запись оценки
+                writer.Write(grade.Date.ToBinary()); // Запись даты в бинарном формате
             }
         }
     }
 
-    public class Admin : User
+    // Функция загрузки данных студента из бинарного файла
+    public static Student LoadStudent(string filename)
     {
-        public Admin(string login, string password) : base("Администратор", login, password) { }
-
-        public void ManageUsers<T>(List<T> users, Func<T> createUser) where T : User
+        Student student = new Student();
+        using (BinaryReader reader = new BinaryReader(new FileStream(filename, FileMode.Open)))
         {
-            Console.Clear();
-            Console.WriteLine("1. Добавить\n2. Удалить\n3. Назад");
-            var choice = Console.ReadKey(true).Key;
-            if (choice == ConsoleKey.D1)
+            student.FullName = reader.ReadString(); // Чтение полного имени
+            student.Age = reader.ReadInt32(); // Чтение возраста
+            student.BirthYear = reader.ReadInt32(); // Чтение года рождения
+            student.Group = reader.ReadString(); // Чтение группы
+            student.Login = reader.ReadString(); // Чтение логина
+            student.Password = reader.ReadString(); // Чтение пароля
+
+            int gradeCount = reader.ReadInt32(); // Чтение количества оценок
+            for (int i = 0; i < gradeCount; i++)
             {
-                users.Add(createUser());
-                Console.WriteLine("Пользователь добавлен.");
-            }
-            else if (choice == ConsoleKey.D2)
-            {
-                Console.Write("Введите логин для удаления: ");
-                var user = users.FirstOrDefault(u => u.Login == Console.ReadLine());
-                if (user != null)
+                student.Grades.Add(new Grade
                 {
-                    users.Remove(user);
-                    Console.WriteLine("Пользователь удалён.");
-                }
-                else
-                {
-                    Console.WriteLine("Пользователь не найден.");
-                }
+                    Subject = reader.ReadString(), // Чтение названия предмета
+                    Score = reader.ReadInt32(), // Чтение оценки
+                    Date = DateTime.FromBinary(reader.ReadInt64()) // Чтение даты из бинарного формата
+                });
             }
-            Console.ReadKey();
         }
+        return student;
     }
 
-    public class Grade
+
+    public static void Main(string[] args)
     {
-        public string Subject { get; set; }
-        public int Value { get; set; }
-        public DateTime Date { get; set; } = DateTime.Now;
+        // Пример использования:
+        Student student = new Student
+        {
+            FullName = "Дмитрий Алферов", // Изменено имя
+            Age = 20,
+            BirthYear = 2003,
+            Group = "БСТ-22",
+            Login = "dmitryalferov",
+            Password = "password123" // NEVER store passwords like this in real applications!
+        };
+        student.Grades.Add(new Grade { Subject = "Основы алгоритмизации и программирования", Score = 5, Date = DateTime.Now }); // Изменен предмет
+        student.Grades.Add(new Grade { Subject = "Технические средства информатизации", Score = 4, Date = DateTime.Now.AddDays(-5) }); // Изменен предмет
 
-        public Grade(string subject, int value) => (Subject, Value) = (subject, value);
-    }
 
-    class Program
-    {
-        static List<Student> students = new();
-        static List<Teacher> teachers = new();
-        static Admin admin = new("admin", "admin123");
+        SaveStudent(student, "student.dat"); // Сохранение данных в файл
+        Student loadedStudent = LoadStudent("student.dat"); // Загрузка данных из файла
 
-        static void Main() => LoadData();
+        Console.WriteLine($"Загруженное имя: {loadedStudent.FullName}"); // Вывод загруженных данных
+        foreach (var grade in loadedStudent.Grades)
+        {
+            Console.WriteLine($"Предмет: {grade.Subject}, Оценка: {grade.Score}, Дата: {grade.Date}");
+        }
     }
 }
