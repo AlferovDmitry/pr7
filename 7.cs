@@ -87,7 +87,6 @@ public class Program
 
     public static void UpdateStudentGrade(string filename, string subject, int newScore)
     {
-        // ... (Обработка ошибок и валидация крайне важны!) ...
 
         Student student = LoadStudent(filename);
 
@@ -116,7 +115,7 @@ public class Program
             BirthYear = 2003,
             Group = "БСТ-22",
             Login = "dmitryalferov",
-            Password = "password123" // НИКОГДА не храните пароли так в реальных приложениях!
+            Password = "password123" 
         };
         student.Grades.Add(new Grade { Subject = "Основы алгоритмизации и программирования", Score = 4, Date = DateTime.Now }); // Изменен предмет и оценка
         student.Grades.Add(new Grade { Subject = "Технические средства информатизации", Score = 4, Date = DateTime.Now.AddDays(-5) }); // Изменен предмет
@@ -133,6 +132,5 @@ public class Program
 
         UpdateStudentGrade("student.dat", "Основы алгоритмизации и программирования", 5); // Изменение оценки
 
-		// ... (Добавьте здесь код для реализации меню и контроля доступа на основе ролей) ...
     }
 }
